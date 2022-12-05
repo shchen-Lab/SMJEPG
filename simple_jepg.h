@@ -9,6 +9,8 @@
 
 int64_t timeus();
 
+typedef unsigned const char *BufPtr;
+
 static std::unique_ptr<std::vector<uint8_t>> Read(const std::string &path);
 
 class HuffmanTable {
@@ -63,7 +65,6 @@ class JPEGDecoder {
   void GetQuantTable();
 
   void GetSize();
-
   // Get four huffman table
   void GetHuffmanTable();
 
@@ -88,7 +89,11 @@ class JPEGDecoder {
 
   template <typename T>
   void YUV2RGB(uint8_t *data, T *Y, T *Cr, T *Cb, int h, int w, int rh, int rw);
- 
+  
+  bool findJPEGheader(BufPtr *start, uint32_t *len, uint8_t marker);
+  bool decodeJPEGfile(BufPtr *start, uint32_t *len, BufPtr *qtable0, BufPtr *qtable1);
+  void skipScanBytes(BufPtr *start);
+  void nextJpegBlock(BufPtr *bytes);
  private:
   std::unique_ptr<std::vector<uint8_t>> raw_;
 
@@ -101,7 +106,7 @@ class JPEGDecoder {
 
   float unzip_matrix_[64];
 
-  uint8_t *raw_data_;
+  uint8_t  *raw_data_;
 
   uint8_t *im_data_;
 
