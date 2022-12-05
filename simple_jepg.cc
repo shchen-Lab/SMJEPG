@@ -7,7 +7,7 @@
 #include <cassert>
 #include <cmath>
 #include "simple_jepg.h"
-
+#include "JPEGSamples.h"
 static uint8_t zip_table_[64] = {
   0,  1,  5,  6,  14, 15, 27, 28,
   2,  4,  7,  13, 16, 26, 29, 42,
@@ -89,15 +89,20 @@ JPEGDecoder::JPEGDecoder(const std::string path) {
 
     // locate quant tables if possible
   BufPtr qtable0, qtable1;
+  #if 1
+  BufPtr bytes=raw_data_;
   uint32_t dataLen=raw_->size();
-  printf("data len =%d\r\n",dataLen);
-  unsigned char jpegraw[dataLen+1]={0};
-  memcpy(&jpegraw[0],raw_data_,dataLen);
-  if (!decodeJPEGfile((BufPtr *)&jpegraw[0],&dataLen, &qtable0, &qtable1)) 
+  #else 
+
+  BufPtr bytes=capture_jpg;
+  uint32_t dataLen=jpg_len;
+  #endif
+  if (!decodeJPEGfile(&bytes,&dataLen, &qtable0, &qtable1)) 
   {
     printf("can't decode jpeg data\n");
     return;
   }
+
   Decode();
 }
 
@@ -325,16 +330,16 @@ bool JPEGDecoder::findJPEGheader(BufPtr *start, uint32_t *len, uint8_t marker)
     // might fall off array if jpeg is invalid
     // FIXME - return false instead
     while(bytes - *start < *len) {
-      printf("unexpected jpeg typecode444\r\n");
+      
         uint8_t framing = *bytes++; // better be 0xff
         if(framing != 0xff) {
             printf("malformed jpeg, framing=%x\n", framing);
             return false;
         }
-          printf("unexpected jpeg typecode222\r\n");
+        
         uint8_t typecode = *bytes++;
         if(typecode == marker) {
-            printf("unexpected jpeg typecode111\r\n");
+           
             unsigned skipped = bytes - *start;
             //printf("found marker 0x%x, skipped %d\n", marker, skipped);
 
@@ -358,7 +363,7 @@ bool JPEGDecoder::findJPEGheader(BufPtr *start, uint32_t *len, uint8_t marker)
             case 0xc0:   // sof0
             case 0xda:   // sos
             {
-                printf("unexpected jpeg typecode111\r\n");
+               
                 // standard format section with 2 bytes for len.  skip that many bytes
                 uint32_t len = bytes[0] * 256 + bytes[1];
                 //printf("skipping section 0x%x, %d bytes\n", typecode, len);
@@ -420,6 +425,11 @@ bool JPEGDecoder::decodeJPEGfile(BufPtr *start, uint32_t *len, BufPtr *qtable0, 
     else {
         // printf("found quant table %x\n", quantstart[2]);
         printf("find quant table 0\n");
+        for(int i=0; i<quantlen;i++){
+
+          printf("%x ",*quantstart++);
+
+        }
         *qtable0 = quantstart + 3;     // 3 bytes of header skipped
         nextJpegBlock(&quantstart);
         if(!findJPEGheader(&quantstart, &quantlen, 0xdb)) {
