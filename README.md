@@ -35,3 +35,17 @@ JFIF APP0标记段：在强制性JFIF APP0标记段中指定图像的参数，�
 |Xthumbnail|1|嵌入的RGB缩略图的水平像素数，可以为零|
 |Ythumbnail|1|嵌入的RGB缩略图的垂直像素数，可以为零|
 |缩略图数据|3*n|	未压缩的24位RGB(每个颜色通道8位)光栅缩略图数据，顺序为R0、G0、B0、…Rn、Gn、Bn；其中n= Xthumbnail* Ythumbnail|
+
+
+|源图像|---〉|正离散余弦变换|-->|量化|--〉|编码（常用霍夫曼编码）|--〉|JPEG图像|
+                （FDCT）    （自建量化表）      （自建编码表）
+
+
+|JPEG图像|--〉|解码|--〉|逆量化|------〉|反离散余弦变换|--〉|原图像|
+       （使用编码时对应的编码表，量化表）    （IDCT）
+
+
+
+关于huffman表和量化表可以查看：
+https://blog.csdn.net/fzh2712/article/details/28318715
+https://www.jianshu.com/p/43f34bceef9a
